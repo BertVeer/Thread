@@ -1,12 +1,12 @@
-//============================================================================
-// Generic thread class
-// (C)2006 Bert vt Veer
-//============================================================================
+//-------------------------------------------------------------
+// Simple cross-platform thread class
+// Use-at-your-own-risk license
+//-------------------------------------------------------------
 
 #ifndef THREAD_H
 #define THREAD_H
 
-// Platform-specific stuff
+
 #ifdef _MSC_VER
 
 #pragma once
@@ -15,7 +15,7 @@
 
 #define THREAD_MUTEX_T CRITICAL_SECTION
 #define THREAD_ID_T HANDLE
-//unsigned long
+
 #define THREAD_TYPE_T void
 #define THREAD_RET_T
 
@@ -23,7 +23,7 @@
 #define UNLOCK_MUTEX LeaveCriticalSection(&mutex)
 #define START_THREAD(f,p) InitializeCriticalSection(&mutex); id=(HANDLE)_beginthread(f, 0, p)
 
-#else // assuming Linux or anything supporting pthreads
+#else
 
 #include <pthread.h>
 
@@ -38,19 +38,11 @@
 
 #endif
 
-//============================================================================
-// Implementation
-//============================================================================
 
-namespace pro {
-
-
-// Main Thread class
 class Thread 
 {
 	private:
 	protected:
-		// typedefs
 		typedef void (*user_func_t)(void);
 		typedef THREAD_TYPE_T (*fptr_t)(void *);
 		typedef THREAD_TYPE_T type_t;
@@ -64,12 +56,10 @@ class Thread
 				: self(pSelf), userfunc(pUserFunc) {}
 		} descriptor;
 
-		// housekeeping
 		THREAD_MUTEX_T mutex;
 		THREAD_ID_T id;
 		e_threadstate state;
 
-		// dispatch function (actual thread routine)
 		friend static type_t dispatch(void* pDesc) {
 			s_descriptor _desc = *(s_descriptor*)pDesc;
 			while (_desc.self->state == running) (*(_desc.userfunc))();
@@ -78,30 +68,23 @@ class Thread
 		}
 
 	public:
-		// construct/destruct
 		Thread() : state(init) {}
 		Thread(user_func_t pFunc) { Run(pFunc); }
 		virtual ~Thread() {
 			if (state == running) {	End(); }
 		}
 
-		// user functions
 		void Lock() { LOCK_MUTEX; }
 		void Unlock() { UNLOCK_MUTEX; }
 		void Run(user_func_t pFunc) {
-			//static s_descriptor _desc(this, pFunc);
 			descriptor = s_descriptor(this, pFunc);
 			state = running;
 			START_THREAD(dispatch, (void*)&descriptor);
-			//SetThreadPriority(id, THREAD_PRIORITY_HIGHEST);//// Windows only!!
 		}
 		void End() { 
 			state = stopped;
-			//while (state!=finished); // wait
 		}
 };
 
-
-}; // namespace pro
 #endif // THREAD_H
 
