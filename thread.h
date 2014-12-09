@@ -1,12 +1,13 @@
 //-------------------------------------------------------------
 // Simple cross-platform thread class
-// Use-at-your-own-risk license
+// Use-at-your-own-risk license 2006-2014 Bert van't Veer
 //-------------------------------------------------------------
 
 #ifndef THREAD_H
 #define THREAD_H
 
 
+// Windows
 #ifdef _MSC_VER
 
 #pragma once
@@ -23,6 +24,7 @@
 #define UNLOCK_MUTEX LeaveCriticalSection(&mutex)
 #define START_THREAD(f,p) InitializeCriticalSection(&mutex); id=(HANDLE)_beginthread(f, 0, p)
 
+// OSX, Linux or anything supporting pthreads
 #else
 
 #include <pthread.h>
@@ -41,7 +43,6 @@
 
 class Thread 
 {
-	private:
 	protected:
 		typedef void (*user_func_t)(void);
 		typedef THREAD_TYPE_T (*fptr_t)(void *);
